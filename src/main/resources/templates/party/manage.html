@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar PT - Tibia Party Finder</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a th:href="@{/}" class="logo">
+                <span class="logo-icon">&#9876;</span>
+                <span class="logo-text">Tibia PT Finder</span>
+            </a>
+            <nav class="nav">
+                <span class="nav-user">
+                    <span th:text="${character.name}">CharName</span>
+                    (<span th:text="${character.vocation.abbreviation}">EK</span>
+                    <span th:text="${character.level}">100</span>) -
+                    <span th:text="${character.world.name}">World</span>
+                </span>
+                <a th:href="@{/parties}" class="nav-link">PTs</a>
+                <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="page-header">
+            <div class="page-title">
+                <a th:href="@{/parties}" class="back-link">&larr; Voltar</a>
+                <h1>Gerenciar PT</h1>
+                <p class="text-secondary" th:text="${party.displayName}">Party Name</p>
+            </div>
+        </div>
+
+        <!-- Informacoes da Party -->
+        <div class="manage-section">
+            <div class="party-summary">
+                <div class="summary-item">
+                    <span class="label">Tipo:</span>
+                    <span class="party-type" th:classappend="${party.type.name() == 'HUNT'} ? 'hunt' : 'boss'"
+                          th:text="${party.type}">HUNT</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Membros:</span>
+                    <span th:text="${party.currentMembers + '/' + party.maxMembers}">1/5</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Level:</span>
+                    <span th:text="${party.levelRange}">200 - 500</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Tempo restante:</span>
+                    <span th:text="${party.minutesUntilExpiration + ' min'}">30 min</span>
+                </div>
+            </div>
+
+            <!-- Vagas por Vocacao -->
+            <div th:if="${party.hasVocationRequirements}" class="vocation-slots-summary">
+                <h4>Vagas por Vocacao</h4>
+                <div class="vocation-slots-display">
+                    <th:block th:each="slot : ${party.vocationSlots}">
+                        <span class="voc-slot" th:classappend="${slot.full} ? 'full' : ''">
+                            <span class="voc-tag"
+                                  th:classappend="${slot.vocation.name().toLowerCase()}"
+                                  th:text="${slot.abbreviation}">EK</span>
+                            <span class="slot-count" th:text="${slot.slotsFilled + '/' + slot.slotsNeeded}">0/2</span>
+                        </span>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <!-- Solicitacoes Pendentes -->
+        <div class="manage-section">
+            <h2>
+                Solicitacoes Pendentes
+                <span th:if="${pendingCount > 0}" class="pending-count" th:text="${'(' + pendingCount + ')'}"></span>
+            </h2>
+
+            <!-- Lista de solicitacoes -->
+            <div th:if="${pendingRequests != null and !pendingRequests.isEmpty()}" class="requests-list">
+                <div th:each="request : ${pendingRequests}" class="request-card">
+                    <div class="request-info">
+                        <div class="request-character">
+                            <strong th:text="${request.characterName}">CharName</strong>
+                            <span class="voc-tag"
+                                  th:classappend="${request.characterVocation.toLowerCase()}"
+                                  th:text="${request.characterVocation}">EK</span>
+                            <span class="level" th:text="${'Lvl ' + request.characterLevel}">Lvl 300</span>
+                        </div>
+                        <div th:if="${request.message != null and !request.message.isEmpty()}" class="request-message">
+                            <em>"<span th:text="${request.message}">Mensagem do jogador</span>"</em>
+                        </div>
+                        <div class="request-time">
+                            <small>Solicitado em <span th:text="${#temporals.format(request.createdAt, 'dd/MM HH:mm')}">25/12 20:00</span></small>
+                        </div>
+                    </div>
+
+                    <div class="request-actions">
+                        <!-- Aceitar -->
+                        <form th:action="@{/parties/{partyId}/requests/{requestId}/accept(partyId=${party.id}, requestId=${request.id})}"
+                              method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Aceitar
+                            </button>
+                        </form>
+
+                        <!-- Recusar com motivo -->
+                        <div class="reject-form">
+                            <form th:action="@{/parties/{partyId}/requests/{requestId}/reject(partyId=${party.id}, requestId=${request.id})}"
+                                  method="post" class="reject-inline-form">
+                                <input type="text" name="reason"
+                                       class="input-sm"
+                                       placeholder="Motivo (opcional)"
+                                       maxlength="200">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    Recusar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nenhuma solicitacao -->
+            <div th:if="${pendingRequests == null or pendingRequests.isEmpty()}" class="empty-requests">
+                <div class="empty-icon">&#128172;</div>
+                <p>Nenhuma solicitacao pendente</p>
+                <small>Quando alguem solicitar entrada na sua PT, aparecera aqui</small>
+            </div>
+        </div>
+
+        <!-- Acoes da Party -->
+        <div class="manage-section actions-section">
+            <h2>Acoes</h2>
+            <div class="action-buttons">
+                <a th:href="@{/parties}" class="btn btn-secondary">
+                    Voltar para lista
+                </a>
+                <form th:action="@{/parties/{id}/cancel(id=${party.id})}"
+                      method="post" style="display: inline;">
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Tem certeza que deseja cancelar esta PT? Esta acao nao pode ser desfeita.')">
+                        Cancelar PT
+                    </button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
+    </footer>
+</body>
+</html>

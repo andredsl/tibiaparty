@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PTs Disponiveis - Tibia Party Finder</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a th:href="@{/}" class="logo">
+                <span class="logo-icon">&#9876;</span>
+                <span class="logo-text">Tibia PT Finder</span>
+            </a>
+            <nav class="nav">
+                <span class="nav-user">
+                    <span th:text="${character.name}">CharName</span>
+                    (<span th:text="${character.vocation.abbreviation}">EK</span>
+                    <span th:text="${character.level}">100</span>) -
+                    <span th:text="${character.world.name}">World</span>
+                </span>
+                <a th:href="@{/parties}" class="nav-link active">PTs</a>
+                <a th:href="@{/parties/create}" class="nav-link">Criar PT</a>
+                <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <!-- Notificacoes de recusa -->
+        <div th:if="${recentRejections != null and !recentRejections.isEmpty()}" class="rejection-notifications">
+            <div th:each="rejection : ${recentRejections}" class="rejection-card">
+                <div class="rejection-icon">&#10060;</div>
+                <div class="rejection-content">
+                    <strong>Solicitacao recusada</strong>
+                    <p>
+                        Sua solicitacao para <span th:text="${rejection.partyName}">Party</span>
+                        foi recusada por <span th:text="${rejection.leaderName}">Lider</span>
+                    </p>
+                    <p th:if="${rejection.rejectionReason != null}" class="rejection-reason">
+                        <em>Motivo: "<span th:text="${rejection.rejectionReason}">Motivo</span>"</em>
+                    </p>
+                </div>
+                <form th:action="@{/parties/rejections/{id}/dismiss(id=${rejection.id})}" method="post" style="display: inline;">
+                    <button type="submit" class="dismiss-btn" title="Dispensar notificacao">&#10005;</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Solicitacoes pendentes -->
+        <div th:if="${myPendingRequests != null and !myPendingRequests.isEmpty()}" class="pending-requests-section">
+            <h3>Suas Solicitacoes Pendentes</h3>
+            <div class="pending-requests-list">
+                <div th:each="req : ${myPendingRequests}" class="pending-request-card">
+                    <div class="pending-info">
+                        <span class="party-name" th:text="${req.partyName}">Party Name</span>
+                        <span class="pending-badge">Aguardando resposta</span>
+                    </div>
+                    <form th:action="@{/parties/requests/{id}/cancel(id=${req.id})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-danger">Cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <div class="page-title">
+                <h1>PTs em <span th:text="${character.world.name}">World</span></h1>
+                <p class="text-secondary">Encontre sua party para hunt, boss ou soul core</p>
+            </div>
+            <a th:href="@{/parties/create}" class="btn btn-primary">
+                + Criar PT
+            </a>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filters">
+            <a th:href="@{/parties}"
+               th:classappend="${selectedType == null} ? 'active' : ''"
+               class="filter-btn">Todas</a>
+            <a th:href="@{/parties(type='HUNT')}"
+               th:classappend="${selectedType != null and selectedType.name() == 'HUNT'} ? 'active' : ''"
+               class="filter-btn">Hunts</a>
+            <a th:href="@{/parties(type='BOSS')}"
+               th:classappend="${selectedType != null and selectedType.name() == 'BOSS'} ? 'active' : ''"
+               class="filter-btn">Bosses</a>
+            <a th:href="@{/parties(type='SOUL_CORE')}"
+               th:classappend="${selectedType != null and selectedType.name() == 'SOUL_CORE'} ? 'active' : ''"
+               class="filter-btn">Soul Core</a>
+        </div>
+
+        <!-- Lista de Parties -->
+        <div th:if="${parties != null and !parties.isEmpty()}" class="party-list">
+            <div th:each="party : ${parties}"
+                 class="party-card"
+                 th:classappend="${currentParty != null and currentParty.id == party.id} ? 'my-party' : ''">
+
+                <!-- Badge de "Sua PT" -->
+                <div th:if="${currentParty != null and currentParty.id == party.id}" class="my-party-badge">
+                    <span>&#11088; Sua PT</span>
+                </div>
+
+                <div class="party-header">
+                    <span class="party-type"
+                          th:classappend="${party.type.name() == 'HUNT'} ? 'hunt' : (${party.type.name() == 'BOSS'} ? 'boss' : 'soulcore')"
+                          th:text="${party.type.displayName}">HUNT</span>
+                    <span th:if="${party.type.name() != 'SOUL_CORE'}" class="party-time">
+                        <span th:text="${party.minutesUntilExpiration}">30</span> min restantes
+                    </span>
+                </div>
+
+                <h3 class="party-name" th:text="${party.displayName}">Asuras</h3>
+
+                <div class="party-info">
+                    <div class="party-leader">
+                        <span class="label">Lider:</span>
+                        <span th:text="${party.leaderName}">CharName</span>
+                        (<span th:text="${party.leaderVocation}">EK</span>
+                        <span th:text="${party.leaderLevel}">300</span>)
+                    </div>
+
+                    <div class="party-level">
+                        <span class="label">Level:</span>
+                        <span th:text="${party.levelRange}">200 - 500</span>
+                    </div>
+
+                    <div class="party-slots">
+                        <span class="label">Membros:</span>
+                        <span th:text="${party.currentMembers + '/' + party.maxMembers}">1/5</span>
+                    </div>
+
+                    <!-- Vagas por Vocacao -->
+                    <div th:if="${party.hasVocationRequirements}" class="party-vocation-slots">
+                        <span class="label">Vagas:</span>
+                        <div class="vocation-slots-display">
+                            <th:block th:each="slot : ${party.vocationSlots}">
+                                <span class="voc-slot"
+                                      th:classappend="${slot.full} ? 'full' : ''">
+                                    <span class="voc-tag"
+                                          th:classappend="${slot.vocation.name().toLowerCase()}"
+                                          th:text="${slot.abbreviation}">EK</span>
+                                    <span class="slot-count"
+                                          th:text="${slot.slotsFilled + '/' + slot.slotsNeeded}">0/2</span>
+                                </span>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <!-- Horario/Inicio -->
+                    <div th:if="${party.type.name() == 'BOSS'}" class="party-scheduled">
+                        <span class="label">Inicio:</span>
+                        <span th:if="${party.startWhenFull}" class="start-when-full">Quando completa</span>
+                        <span th:if="${!party.startWhenFull and party.scheduledTime != null}"
+                              th:text="${#temporals.format(party.scheduledTime, 'dd/MM HH:mm')}">25/12 20:00</span>
+                        <span th:if="${!party.startWhenFull and party.scheduledTime == null}">Nao definido</span>
+                    </div>
+
+                    <!-- Preco por Player (Soul Core) -->
+                    <div th:if="${party.type.name() == 'SOUL_CORE'}" class="party-price">
+                        <span class="label">Preco/player:</span>
+                        <span class="price-value" th:text="${party.formattedPrice}">5kk</span>
+                    </div>
+
+                    <!-- Lider apenas gerencia (Soul Core) -->
+                    <div th:if="${party.type.name() == 'SOUL_CORE' and !party.leaderParticipates}" class="party-leader-role">
+                        <span class="badge badge-manager">Lider apenas gerencia</span>
+                    </div>
+                </div>
+
+                <div th:if="${party.description != null and !party.description.isEmpty()}" class="party-description">
+                    <p th:text="${party.description}">Descricao da party...</p>
+                </div>
+
+                <div class="party-actions">
+                    <!-- Se e o lider -->
+                    <th:block th:if="${party.leaderId == character.id}">
+                        <span class="badge badge-leader">Voce e o lider</span>
+                        <a th:href="@{/parties/{id}/manage(id=${party.id})}" class="btn btn-primary btn-sm">
+                            Gerenciar PT
+                        </a>
+                        <form th:action="@{/parties/{id}/cancel(id=${party.id})}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Tem certeza que deseja cancelar esta PT?')">
+                                Cancelar PT
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- Se e membro (mas nao lider) -->
+                    <th:block th:if="${currentParty != null and currentParty.id == party.id and party.leaderId != character.id}">
+                        <span class="badge badge-member">Voce esta nesta PT</span>
+                        <form th:action="@{/parties/{id}/leave(id=${party.id})}"
+                              method="post"
+                              style="display: inline;">
+                            <button type="submit" class="btn btn-warning btn-sm"
+                                    onclick="return confirm('Tem certeza que deseja sair desta PT?')">
+                                Sair da PT
+                            </button>
+                        </form>
+                    </th:block>
+
+                    <!-- Se nao e membro desta party -->
+                    <th:block th:if="${currentParty == null or currentParty.id != party.id}">
+                        <!-- Verifica se tem solicitacao pendente para esta party -->
+                        <th:block th:with="hasPendingRequest=${pendingPartyIds.contains(party.id)}">
+
+                            <!-- Ja tem solicitacao pendente -->
+                            <th:block th:if="${hasPendingRequest}">
+                                <span class="badge badge-pending">Solicitacao pendente</span>
+                            </th:block>
+
+                            <!-- Nao tem solicitacao pendente -->
+                            <th:block th:if="${!hasPendingRequest}">
+                                <!-- Verifica se ja esta em outra party -->
+                                <th:block th:if="${isInParty}">
+                                    <span class="join-blocked">
+                                        <button class="btn btn-secondary btn-sm" disabled
+                                                title="Voce ja esta em uma PT">
+                                            Solicitar entrada
+                                        </button>
+                                        <small class="block-reason">Voce ja esta em uma PT</small>
+                                    </span>
+                                </th:block>
+
+                                <!-- Nao esta em party, verifica se pode solicitar -->
+                                <th:block th:if="${!isInParty}">
+                                    <th:block th:with="canJoin=${party.canJoin(character.vocation)}, blockReason=${party.getJoinBlockReason(character.vocation)}">
+
+                                        <!-- Pode solicitar -->
+                                        <form th:if="${canJoin}"
+                                              th:action="@{/parties/{id}/join(id=${party.id})}"
+                                              method="post"
+                                              class="join-form">
+                                            <input type="text" name="message"
+                                                   class="input-sm"
+                                                   placeholder="Mensagem (opcional)"
+                                                   maxlength="100">
+                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                Solicitar entrada
+                                            </button>
+                                        </form>
+
+                                        <!-- Nao pode solicitar -->
+                                        <span th:if="${!canJoin}" class="join-blocked">
+                                            <button class="btn btn-secondary btn-sm" disabled
+                                                    th:title="${blockReason}">
+                                                Solicitar entrada
+                                            </button>
+                                            <small class="block-reason" th:text="${blockReason}">Motivo</small>
+                                        </span>
+                                    </th:block>
+                                </th:block>
+                            </th:block>
+                        </th:block>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado vazio -->
+        <div th:if="${parties == null or parties.isEmpty()}" class="empty-state">
+            <div class="empty-icon">&#128269;</div>
+            <h2>Nenhuma PT disponivel</h2>
+            <p th:if="${selectedType != null}">
+                Nao ha parties de <span th:text="${selectedType}">tipo</span> no momento.
+            </p>
+            <p th:if="${selectedType == null}">
+                Nao ha parties ativas em <span th:text="${character.world.name}">World</span> no momento.
+            </p>
+            <a th:if="${!isInParty}" th:href="@{/parties/create}" class="btn btn-primary">Criar PT</a>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
+    </footer>
+</body>
+</html>

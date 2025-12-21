@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar - Tibia Party Finder</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card verify-card">
+            <div class="auth-header">
+                <span class="auth-icon">&#128274;</span>
+                <h1>Verificar Character</h1>
+                <p class="auth-subtitle" th:if="${isNewUser}">Primeiro acesso - Vamos verificar seu character</p>
+                <p class="auth-subtitle" th:unless="${isNewUser}">Confirme que voce e o dono do character</p>
+            </div>
+
+            <!-- Flash Messages -->
+            <div th:if="${error}" class="alert alert-error">
+                <span th:text="${error}"></span>
+                <span th:if="${attemptsRemaining != null}">
+                    (Tentativas restantes: <strong th:text="${attemptsRemaining}"></strong>)
+                </span>
+            </div>
+
+            <div th:if="${suggestWait}" class="alert alert-warning">
+                O Tibia.com pode demorar ate 2 minutos para atualizar o comment.
+                Aguarde um pouco e tente novamente.
+            </div>
+
+            <!-- Token Info -->
+            <div th:if="${token != null}" class="token-info">
+                <div class="character-preview">
+                    <div class="char-name" th:text="${token.characterName}">Character Name</div>
+                    <div class="char-details">
+                        <span th:text="${token.vocation}">Vocation</span> -
+                        Level <span th:text="${token.level}">100</span> -
+                        <span th:text="${token.world}">World</span>
+                    </div>
+                </div>
+
+                <div class="verification-code">
+                    <label>Seu codigo de verificacao:</label>
+                    <div class="code-display">
+                        <code id="verificationCode" th:text="${token.code}">TPF-XXXXXX</code>
+                        <button type="button" class="btn-copy" onclick="copyCode()">Copiar</button>
+                    </div>
+                    <div class="code-expiry">
+                        Expira em <strong th:text="${token.minutesUntilExpiration}">15</strong> minutos
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h3>Instrucoes:</h3>
+                    <ol>
+                        <li>
+                            Acesse <a href="https://www.tibia.com/account/?subtopic=accountmanagement" target="_blank" rel="noopener">tibia.com</a> e faca login
+                        </li>
+                        <li>Va em <strong>"My Account"</strong> e depois <strong>"Characters"</strong></li>
+                        <li>Clique em <strong>"Edit"</strong> no character <strong th:text="${token.characterName}">Nome</strong></li>
+                        <li>
+                            No campo <strong>"Comment"</strong>, adicione o codigo:
+                            <code th:text="${token.code}">TPF-XXXXXX</code>
+                        </li>
+                        <li>Clique em <strong>"Submit"</strong> para salvar</li>
+                        <li>Volte aqui e clique em <strong>"Verificar"</strong></li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Verification Form -->
+            <form th:action="@{/auth/verify}" method="post" class="auth-form">
+                <div class="form-group">
+                    <label for="code">Codigo de Verificacao</label>
+                    <input type="text"
+                           id="code"
+                           name="code"
+                           th:value="${token != null ? token.code : ''}"
+                           placeholder="TPF-XXXXXX"
+                           required
+                           style="text-transform: uppercase;"
+                           autocomplete="off">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Verificar Codigo
+                </button>
+            </form>
+
+            <div class="auth-actions">
+                <a th:href="@{/auth/register}" class="btn btn-link">
+                    Voltar e usar outro personagem
+                </a>
+            </div>
+        </div>
+
+        <footer class="auth-footer">
+            <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyCode() {
+            var codeEl = document.getElementById('verificationCode');
+            if (codeEl) {
+                var code = codeEl.textContent;
+                navigator.clipboard.writeText(code).then(function() {
+                    var btn = document.querySelector('.btn-copy');
+                    btn.textContent = 'Copiado!';
+                    setTimeout(function() { btn.textContent = 'Copiar'; }, 2000);
+                });
+            }
+        }
+
+        // Auto uppercase
+        var codeInput = document.getElementById('code');
+        if (codeInput) {
+            codeInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+    </script>
+</body>
+</html>

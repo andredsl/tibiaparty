@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Conta - Tibia Party Finder</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-icon">&#9876;</span>
+                <h1>Criar Conta</h1>
+                <p class="auth-subtitle">Verifique seu personagem para comecar</p>
+            </div>
+
+            <!-- Flash Messages -->
+            <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+            <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+            <form th:action="@{/auth/register}" method="post" class="auth-form">
+                <div class="form-group">
+                    <label for="characterName">Nome do Personagem</label>
+                    <input type="text"
+                           id="characterName"
+                           name="characterName"
+                           th:value="${loginRequest?.characterName}"
+                           placeholder="Ex: Knight Eternal"
+                           required
+                           autofocus
+                           autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="world">Servidor</label>
+                    <select id="world" name="world" required>
+                        <option value="">Selecione o servidor</option>
+                        <option th:each="w : ${worlds}"
+                                th:value="${w.name}"
+                                th:text="${w.name + ' (' + w.location + ' - ' + w.pvpType + ')'}"
+                                th:selected="${loginRequest != null and loginRequest.world == w.name}">
+                        </option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block">
+                    Verificar Personagem
+                </button>
+            </form>
+
+            <div class="auth-info">
+                <h3>Como funciona?</h3>
+                <ol>
+                    <li>Informe seu personagem e servidor</li>
+                    <li>Receba um codigo de verificacao</li>
+                    <li>Coloque o codigo no Comment do seu char no Tibia.com</li>
+                    <li>Defina uma senha para sua conta</li>
+                    <li>Pronto! Agora voce pode fazer login com personagem + senha</li>
+                </ol>
+                <p class="auth-note">
+                    <strong>Verificacao unica!</strong> Depois de criar a conta, basta usar seu personagem e senha para entrar.
+                </p>
+            </div>
+
+            <div class="auth-divider">
+                <span>ou</span>
+            </div>
+
+            <div class="auth-login">
+                <p>Ja tem uma conta?</p>
+                <a th:href="@{/auth/login}" class="btn btn-secondary btn-block">
+                    Fazer Login
+                </a>
+            </div>
+        </div>
+
+        <footer class="auth-footer">
+            <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
+        </footer>
+    </div>
+</body>
+</html>
