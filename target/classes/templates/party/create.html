@@ -1,34 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar PT - Tibia Party Finder</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <a th:href="@{/}" class="logo">
-                <span class="logo-icon">&#9876;</span>
-                <span class="logo-text">Tibia PT Finder</span>
-            </a>
-            <nav class="nav">
-                <span class="nav-user">
-                    <span th:text="${character.name}">CharName</span>
-                    (<span th:text="${character.vocation.abbreviation}">EK</span>
-                    <span th:text="${character.level}">100</span>) -
-                    <span th:text="${character.world.name}">World</span>
-                </span>
-                <a th:href="@{/parties}" class="nav-link">PTs</a>
-                <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
+    <th:block layout:fragment="content">
         <div class="page-header">
             <h1>Criar Nova PT</h1>
             <p class="text-secondary">Preencha os dados da sua party</p>
@@ -271,118 +250,116 @@
                 </div>
             </form>
         </div>
-    </main>
+    </th:block>
 
-    <footer class="footer">
-        <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
-    </footer>
+    <th:block layout:fragment="extraScripts">
+        <script>
+            // Toggle campos baseado no tipo de PT
+            var typeSelect = document.getElementById('type');
+            var locationGroup = document.getElementById('locationGroup');
+            var bossGroup = document.getElementById('bossGroup');
+            var scheduleOptionGroup = document.getElementById('scheduleOptionGroup');
+            var scheduledTimeGroup = document.getElementById('scheduledTimeGroup');
+            var soulCoreGroup = document.getElementById('soulCoreGroup');
+            var priceGroup = document.getElementById('priceGroup');
+            var leaderParticipatesGroup = document.getElementById('leaderParticipatesGroup');
+            var soulCoreInfo = document.getElementById('soulCoreInfo');
+            var vocationSlotsGroup = document.getElementById('vocationSlotsGroup');
+            var maxMembersGroup = document.getElementById('maxMembersGroup');
+            var startWhenFullInput = document.getElementById('startWhenFull');
+            var scheduleOptionWhenFull = document.getElementById('scheduleOptionWhenFull');
+            var scheduleOptionDateTime = document.getElementById('scheduleOptionDateTime');
 
-    <script>
-        // Toggle campos baseado no tipo de PT
-        var typeSelect = document.getElementById('type');
-        var locationGroup = document.getElementById('locationGroup');
-        var bossGroup = document.getElementById('bossGroup');
-        var scheduleOptionGroup = document.getElementById('scheduleOptionGroup');
-        var scheduledTimeGroup = document.getElementById('scheduledTimeGroup');
-        var soulCoreGroup = document.getElementById('soulCoreGroup');
-        var priceGroup = document.getElementById('priceGroup');
-        var leaderParticipatesGroup = document.getElementById('leaderParticipatesGroup');
-        var soulCoreInfo = document.getElementById('soulCoreInfo');
-        var vocationSlotsGroup = document.getElementById('vocationSlotsGroup');
-        var maxMembersGroup = document.getElementById('maxMembersGroup');
-        var startWhenFullInput = document.getElementById('startWhenFull');
-        var scheduleOptionWhenFull = document.getElementById('scheduleOptionWhenFull');
-        var scheduleOptionDateTime = document.getElementById('scheduleOptionDateTime');
+            function toggleFields() {
+                var type = typeSelect.value;
 
-        function toggleFields() {
-            var type = typeSelect.value;
-
-            // Esconde todos os campos especificos
-            locationGroup.style.display = 'none';
-            bossGroup.style.display = 'none';
-            scheduleOptionGroup.style.display = 'none';
-            scheduledTimeGroup.style.display = 'none';
-            soulCoreGroup.style.display = 'none';
-            priceGroup.style.display = 'none';
-            leaderParticipatesGroup.style.display = 'none';
-            soulCoreInfo.style.display = 'none';
-            vocationSlotsGroup.style.display = 'block';
-            maxMembersGroup.style.display = 'block';
-
-            if (type === 'HUNT') {
-                locationGroup.style.display = 'block';
-            } else if (type === 'BOSS') {
-                bossGroup.style.display = 'block';
-                scheduleOptionGroup.style.display = 'block';
-                // Mostra o campo de data/hora baseado na opcao selecionada
-                toggleScheduleOption();
-            } else if (type === 'SOUL_CORE') {
-                soulCoreGroup.style.display = 'block';
-                priceGroup.style.display = 'block';
-                leaderParticipatesGroup.style.display = 'block';
-                soulCoreInfo.style.display = 'block';
-                // Para Soul Core, esconde vagas por vocacao e max members (fixo em 5)
-                vocationSlotsGroup.style.display = 'none';
-                maxMembersGroup.style.display = 'none';
-            }
-
-            updateTotalSlots();
-        }
-
-        function toggleScheduleOption() {
-            var isWhenFull = scheduleOptionWhenFull.checked;
-            startWhenFullInput.value = isWhenFull ? 'true' : 'false';
-
-            if (isWhenFull) {
+                // Esconde todos os campos especificos
+                locationGroup.style.display = 'none';
+                bossGroup.style.display = 'none';
+                scheduleOptionGroup.style.display = 'none';
                 scheduledTimeGroup.style.display = 'none';
-                document.getElementById('scheduledTime').value = '';
-            } else {
-                scheduledTimeGroup.style.display = 'block';
-            }
-        }
+                soulCoreGroup.style.display = 'none';
+                priceGroup.style.display = 'none';
+                leaderParticipatesGroup.style.display = 'none';
+                soulCoreInfo.style.display = 'none';
+                vocationSlotsGroup.style.display = 'block';
+                maxMembersGroup.style.display = 'block';
 
-        // Event listeners para opcoes de agendamento
-        scheduleOptionWhenFull.addEventListener('change', toggleScheduleOption);
-        scheduleOptionDateTime.addEventListener('change', toggleScheduleOption);
-
-        typeSelect.addEventListener('change', toggleFields);
-        toggleFields();
-
-        // Contador de caracteres na descricao
-        var description = document.getElementById('description');
-        var descCount = document.getElementById('descCount');
-
-        description.addEventListener('input', function() {
-            descCount.textContent = this.value.length;
-        });
-
-        // Calcula total de slots por vocacao
-        var slotInputs = document.querySelectorAll('.slot-input');
-        var totalSlotsEl = document.getElementById('totalSlots');
-
-        function updateTotalSlots() {
-            var total = 0;
-            slotInputs.forEach(function(input) {
-                total += parseInt(input.value) || 0;
-            });
-            totalSlotsEl.textContent = total;
-
-            // Se definiu slots, esconde o campo de max members
-            var type = typeSelect.value;
-            if (type !== 'SOUL_CORE') {
-                if (total > 0) {
+                if (type === 'HUNT') {
+                    locationGroup.style.display = 'block';
+                } else if (type === 'BOSS') {
+                    bossGroup.style.display = 'block';
+                    scheduleOptionGroup.style.display = 'block';
+                    // Mostra o campo de data/hora baseado na opcao selecionada
+                    toggleScheduleOption();
+                } else if (type === 'SOUL_CORE') {
+                    soulCoreGroup.style.display = 'block';
+                    priceGroup.style.display = 'block';
+                    leaderParticipatesGroup.style.display = 'block';
+                    soulCoreInfo.style.display = 'block';
+                    // Para Soul Core, esconde vagas por vocacao e max members (fixo em 5)
+                    vocationSlotsGroup.style.display = 'none';
                     maxMembersGroup.style.display = 'none';
+                }
+
+                updateTotalSlots();
+            }
+
+            function toggleScheduleOption() {
+                var isWhenFull = scheduleOptionWhenFull.checked;
+                startWhenFullInput.value = isWhenFull ? 'true' : 'false';
+
+                if (isWhenFull) {
+                    scheduledTimeGroup.style.display = 'none';
+                    document.getElementById('scheduledTime').value = '';
                 } else {
-                    maxMembersGroup.style.display = 'block';
+                    scheduledTimeGroup.style.display = 'block';
                 }
             }
-        }
 
-        slotInputs.forEach(function(input) {
-            input.addEventListener('input', updateTotalSlots);
-        });
+            // Event listeners para opcoes de agendamento
+            scheduleOptionWhenFull.addEventListener('change', toggleScheduleOption);
+            scheduleOptionDateTime.addEventListener('change', toggleScheduleOption);
 
-        updateTotalSlots();
-    </script>
+            typeSelect.addEventListener('change', toggleFields);
+            toggleFields();
+
+            // Contador de caracteres na descricao
+            var description = document.getElementById('description');
+            var descCount = document.getElementById('descCount');
+
+            description.addEventListener('input', function() {
+                descCount.textContent = this.value.length;
+            });
+
+            // Calcula total de slots por vocacao
+            var slotInputs = document.querySelectorAll('.slot-input');
+            var totalSlotsEl = document.getElementById('totalSlots');
+
+            function updateTotalSlots() {
+                var total = 0;
+                slotInputs.forEach(function(input) {
+                    total += parseInt(input.value) || 0;
+                });
+                totalSlotsEl.textContent = total;
+
+                // Se definiu slots, esconde o campo de max members
+                var type = typeSelect.value;
+                if (type !== 'SOUL_CORE') {
+                    if (total > 0) {
+                        maxMembersGroup.style.display = 'none';
+                    } else {
+                        maxMembersGroup.style.display = 'block';
+                    }
+                }
+            }
+
+            slotInputs.forEach(function(input) {
+                input.addEventListener('input', updateTotalSlots);
+            });
+
+            updateTotalSlots();
+        </script>
+    </th:block>
 </body>
 </html>

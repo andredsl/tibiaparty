@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Historico de Apostas - Tibia Party Finder</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Historico de Rodadas</h1>
+                <p class="text-secondary">Veja os resultados das rodadas anteriores</p>
+            </div>
+            <a th:href="@{/betting}" class="btn btn-secondary">Voltar</a>
+        </div>
+
+        <!-- Lista de Rodadas -->
+        <div th:if="${rounds != null and !rounds.isEmpty()}" class="rounds-history">
+            <div th:each="round : ${rounds}" class="round-card history-card">
+                <div class="round-header">
+                    <span class="round-date" th:text="${#temporals.format(round.targetDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                    <span class="round-status"
+                          th:classappend="${round.hasWinners} ? 'has-winners' : 'no-winners'">
+                        <span th:if="${round.hasWinners}">Com Vencedores</span>
+                        <span th:unless="${round.hasWinners}">Sem Vencedores (Acumulou)</span>
+                    </span>
+                </div>
+
+                <div class="round-result">
+                    <div class="winning-creature">
+                        <img th:if="${round.winningCreatureImageUrl != null}"
+                             th:src="${round.winningCreatureImageUrl}"
+                             th:alt="${round.winningCreature}"
+                             class="creature-img-lg" />
+                        <div class="creature-details">
+                            <span class="label">Criatura Boostada:</span>
+                            <span class="creature-name-lg" th:text="${round.winningCreature}">Creature</span>
+                        </div>
+                    </div>
+
+                    <div class="round-stats">
+                        <div class="stat">
+                            <span class="stat-label">Pool Total:</span>
+                            <span class="stat-value" th:text="${round.totalPrizePool} + ' TC'">0 TC</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Apostas Confirmadas:</span>
+                            <span class="stat-value" th:text="${round.confirmedBetsCount}">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado vazio -->
+        <div th:if="${rounds == null or rounds.isEmpty()}" class="empty-state">
+            <div class="empty-icon">&#128202;</div>
+            <h2>Nenhum historico disponivel</h2>
+            <p>As rodadas finalizadas aparecerão aqui.</p>
+        </div>
+    </th:block>
+</body>
+</html>

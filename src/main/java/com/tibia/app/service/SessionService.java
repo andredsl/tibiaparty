@@ -142,6 +142,15 @@ public class SessionService {
     }
 
     /**
+     * Verifica se usuário atual é admin
+     */
+    public boolean isAdmin() {
+        return getCurrentUser()
+                .map(User::isAdmin)
+                .orElse(false);
+    }
+
+    /**
      * Obtém ID do usuário da sessão
      */
     public Long getUserId() {

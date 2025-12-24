@@ -1,35 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerenciar PT - Tibia Party Finder</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <a th:href="@{/}" class="logo">
-                <span class="logo-icon">&#9876;</span>
-                <span class="logo-text">Tibia PT Finder</span>
-            </a>
-            <nav class="nav">
-                <span class="nav-user">
-                    <span th:text="${character.name}">CharName</span>
-                    (<span th:text="${character.vocation.abbreviation}">EK</span>
-                    <span th:text="${character.level}">100</span>) -
-                    <span th:text="${character.world.name}">World</span>
-                </span>
-                <a th:href="@{/parties}" class="nav-link">PTs</a>
-                <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
+    <th:block layout:fragment="content">
         <div class="page-header">
             <div class="page-title">
                 <a th:href="@{/parties}" class="back-link">&larr; Voltar</a>
@@ -152,10 +130,6 @@
                 </form>
             </div>
         </div>
-    </main>
-
-    <footer class="footer">
-        <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
-    </footer>
+    </th:block>
 </body>
 </html>

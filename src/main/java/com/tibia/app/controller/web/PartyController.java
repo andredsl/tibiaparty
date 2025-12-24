@@ -1,11 +1,18 @@
 package com.tibia.app.controller.web;
 
+import com.tibia.app.domain.entity.Bet;
+import com.tibia.app.domain.entity.BettingRound;
 import com.tibia.app.domain.entity.GameCharacter;
+import com.tibia.app.domain.entity.User;
 import com.tibia.app.domain.enums.PartyType;
 import com.tibia.app.domain.enums.Vocation;
+import com.tibia.app.dto.request.CreateBetRequest;
 import com.tibia.app.dto.request.CreatePartyRequest;
+import com.tibia.app.dto.response.BoostedCreatureInfo;
+import com.tibia.app.dto.response.CreatureInfo;
 import com.tibia.app.dto.response.JoinRequestResponse;
 import com.tibia.app.dto.response.PartyResponse;
+import com.tibia.app.service.BettingService;
 import com.tibia.app.service.PartyService;
 import com.tibia.app.service.SessionService;
 import jakarta.validation.Valid;
@@ -30,10 +37,12 @@ public class PartyController {
 
     private final PartyService partyService;
     private final SessionService sessionService;
+    private final BettingService bettingService;
 
-    public PartyController(PartyService partyService, SessionService sessionService) {
+    public PartyController(PartyService partyService, SessionService sessionService, BettingService bettingService) {
         this.partyService = partyService;
         this.sessionService = sessionService;
+        this.bettingService = bettingService;
     }
 
     /**
@@ -81,6 +90,33 @@ public class PartyController {
         model.addAttribute("myPendingRequests", myPendingRequests);
         model.addAttribute("pendingPartyIds", pendingPartyIds);
         model.addAttribute("recentRejections", recentRejections);
+
+        // Dados de apostas
+        model.addAttribute("bettingError", false);
+        try {
+            User user = character.getUser();
+            BettingRound currentRound = bettingService.getOrCreateCurrentRound();
+
+            // Busca apostas do usuario na rodada atual
+            List<Bet> userCurrentBets = bettingService.getUserBetsForCurrentRound(user);
+
+            model.addAttribute("bettingRound", currentRound);
+            model.addAttribute("bettingPool", bettingService.getCurrentPoolTotal());
+            model.addAttribute("roundBetsTotal", bettingService.getCurrentRoundBetsTotal());
+            model.addAttribute("accumulatedPool", bettingService.getCurrentAccumulatedPool());
+            model.addAttribute("userCurrentBets", userCurrentBets);
+            model.addAttribute("canBet", currentRound.canAcceptBets());
+            model.addAttribute("topCreatures", bettingService.getAllCreatures().stream().limit(12).toList());
+        } catch (Exception e) {
+            log.warn("Erro ao carregar dados de apostas: {}", e.getMessage(), e);
+            model.addAttribute("bettingError", true);
+            model.addAttribute("bettingPool", 0L);
+            model.addAttribute("roundBetsTotal", 0L);
+            model.addAttribute("accumulatedPool", 0L);
+            model.addAttribute("userCurrentBets", java.util.Collections.emptyList());
+            model.addAttribute("canBet", false);
+            model.addAttribute("topCreatures", java.util.Collections.emptyList());
+        }
 
         return "party/list";
     }
@@ -373,6 +409,64 @@ public class PartyController {
             partyService.markRejectionAsSeen(requestId);
         } catch (Exception e) {
             log.error("Erro ao dispensar notificacao: {}", e.getMessage());
+        }
+
+        return "redirect:/parties";
+    }
+
+    /**
+     * Aposta rapida direto da pagina de parties
+     */
+    @PostMapping("/quick-bet")
+    public String quickBet(
+            @RequestParam String creatureName,
+            @RequestParam Long amount,
+            RedirectAttributes redirectAttrs) {
+
+        if (!sessionService.isAuthenticated()) {
+            return "redirect:/auth/login";
+        }
+
+        GameCharacter character = sessionService.requireCurrentCharacter();
+        User user = character.getUser();
+
+        try {
+            CreateBetRequest request = new CreateBetRequest();
+            request.setCreatureName(creatureName);
+            request.setAmount(amount);
+
+            Bet bet = bettingService.createBet(user, character, request);
+            redirectAttrs.addFlashAttribute("success",
+                    String.format("Aposta de %d TC em %s registrada! Aguardando confirmacao de pagamento.",
+                            bet.getAmount(), bet.getCreatureName()));
+        } catch (Exception e) {
+            log.error("Erro ao criar aposta rapida: {}", e.getMessage());
+            redirectAttrs.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/parties";
+    }
+
+    /**
+     * Cancela aposta da pagina de parties
+     */
+    @PostMapping("/cancel-bet/{betId}")
+    public String cancelBetFromParties(
+            @PathVariable Long betId,
+            RedirectAttributes redirectAttrs) {
+
+        if (!sessionService.isAuthenticated()) {
+            return "redirect:/auth/login";
+        }
+
+        User user = sessionService.requireCurrentCharacter().getUser();
+
+        try {
+            bettingService.cancelBet(betId, user);
+            redirectAttrs.addFlashAttribute("success", "Aposta cancelada");
+        } catch (Exception e) {
+            log.error("Erro ao cancelar aposta: {}", e.getMessage());
+            redirectAttrs.addFlashAttribute("error", e.getMessage());
         }
 
         return "redirect:/parties";

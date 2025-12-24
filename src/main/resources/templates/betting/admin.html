@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
+<head>
+    <title>Admin Apostas - Tibia Party Finder</title>
+</head>
+<body>
+    <th:block layout:fragment="content">
+        <div class="page-header">
+            <div class="page-title">
+                <h1>Administracao de Apostas</h1>
+                <p class="text-secondary">Confirme pagamentos e gerencie rodadas</p>
+            </div>
+            <a th:href="@{/betting}" class="btn btn-secondary">Voltar</a>
+        </div>
+
+        <!-- Info da Rodada -->
+        <div class="admin-round-info">
+            <div class="round-card">
+                <h3>Rodada Atual</h3>
+                <div class="round-details">
+                    <div class="round-detail">
+                        <span class="label">Data Alvo:</span>
+                        <span class="value" th:text="${#temporals.format(currentRound.targetDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                    </div>
+                    <div class="round-detail">
+                        <span class="label">Pool Confirmado:</span>
+                        <span class="value" th:text="${currentPool} + ' TC'">0 TC</span>
+                    </div>
+                    <div class="round-detail">
+                        <span class="label">Acumulado:</span>
+                        <span class="value" th:text="${currentRound.accumulatedPool} + ' TC'">0 TC</span>
+                    </div>
+                </div>
+
+                <!-- Finalizar Rodada -->
+                <div class="finalize-section" th:if="${!currentRound.isFinalized}">
+                    <form th:action="@{/betting/admin/finalize}" method="post">
+                        <button type="submit" class="btn btn-warning"
+                                onclick="return confirm('Tem certeza que deseja finalizar a rodada de HOJE? Isso ira determinar os vencedores baseado na criatura boostada atual.')">
+                            Finalizar Rodada de Hoje
+                        </button>
+                    </form>
+                    <p class="finalize-warning">
+                        Isso ira buscar a criatura boostada de hoje e determinar os vencedores.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Apostas Pendentes -->
+        <div class="pending-bets-section">
+            <h2>Apostas Pendentes de Confirmacao</h2>
+
+            <div th:if="${pendingBets != null and !pendingBets.isEmpty()}" class="pending-bets-list">
+                <div th:each="bet : ${pendingBets}" class="pending-bet-card">
+                    <div class="bet-user-info">
+                        <strong th:text="${bet.character.name}">CharName</strong>
+                        <span class="user-id">(User #<span th:text="${bet.user.id}">1</span>)</span>
+                    </div>
+
+                    <div class="bet-details">
+                        <div class="bet-creature">
+                            <img th:if="${bet.creatureImageUrl != null}"
+                                 th:src="${bet.creatureImageUrl}"
+                                 class="creature-img-sm" />
+                            <span th:text="${bet.creatureName}">Creature</span>
+                        </div>
+                        <div class="bet-amount">
+                            <strong th:text="${bet.amount} + ' TC'">25 TC</strong>
+                        </div>
+                        <div class="bet-date">
+                            <span th:text="${#temporals.format(bet.createdAt, 'dd/MM HH:mm')}">01/01 12:00</span>
+                        </div>
+                    </div>
+
+                    <div class="bet-actions">
+                        <form th:action="@{/betting/admin/{id}/confirm(id=${bet.id})}" method="post" class="confirm-form">
+                            <input type="text"
+                                   name="notes"
+                                   placeholder="Notas (opcional)"
+                                   class="notes-input" />
+                            <button type="submit" class="btn btn-success btn-sm">
+                                Confirmar Pagamento
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${pendingBets == null or pendingBets.isEmpty()}" class="empty-state-sm">
+                <p>Nenhuma aposta pendente de confirmacao.</p>
+            </div>
+        </div>
+    </th:block>
+</body>
+</html>

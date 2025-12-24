@@ -1,16 +1,35 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${pageTitle} ? ${pageTitle} + ' - Tibia Party Finder' : 'Tibia Party Finder'">Tibia Party Finder</title>
+    <title layout:title-pattern="$CONTENT_TITLE">Tibia Party Finder</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
-    <th:block th:replace="${extraHead}"></th:block>
 </head>
 <body>
     <div class="app-container">
+        <!-- Boosted Creature Banner -->
+        <div class="boosted-banner" th:if="${globalBoostedCreature != null}">
+            <div class="boosted-content">
+                <img th:src="${globalBoostedCreature.imageUrl}"
+                     th:alt="${globalBoostedCreature.name}"
+                     class="boosted-img" />
+                <div class="boosted-info">
+                    <span class="boosted-label">Boostado Hoje:</span>
+                    <span class="boosted-name" th:text="${globalBoostedCreature.name}">Creature Name</span>
+                </div>
+                <div class="boosted-pool">
+                    <span class="pool-label">Pool de Apostas:</span>
+                    <span class="pool-amount" th:text="${globalCurrentPool} + ' TC'">0 TC</span>
+                </div>
+                <a th:href="@{/betting}" class="boosted-bet-btn">Apostar</a>
+            </div>
+        </div>
+
         <!-- Header -->
-        <header class="header" th:fragment="header">
+        <header class="header">
             <div class="header-content">
                 <a th:href="@{/}" class="logo">
                     <span class="logo-icon">&#9876;</span>
@@ -18,9 +37,14 @@
                 </a>
 
                 <nav class="nav" th:if="${session.TIBIA_PF_USER_ID != null}">
-                    <a th:href="@{/parties}" class="nav-link">PTs</a>
-                    <a th:href="@{/parties/create}" class="nav-link">Criar PT</a>
-                    <a th:href="@{/profile}" class="nav-link">Perfil</a>
+                    <a th:href="@{/parties}" class="nav-link"
+                       th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/parties')} ? 'active' : ''">PTs</a>
+<!--                    <a th:href="@{/parties/create}" class="nav-link">Criar PT</a>-->
+                    <a th:href="@{/betting}" class="nav-link nav-betting"
+                       th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/betting') and !#strings.startsWith(#httpServletRequest.requestURI, '/betting/admin')} ? 'active' : ''">Apostas</a>
+<!--                    <a th:href="@{/profile}" class="nav-link">Perfil</a>-->
+                    <a th:if="${isAdmin}" th:href="@{/betting/admin}" class="nav-link nav-admin"
+                       th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/betting/admin')} ? 'active' : ''">Admin</a>
                     <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
                 </nav>
             </div>
@@ -33,16 +57,20 @@
             <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
             <div th:if="${warning}" class="alert alert-warning" th:text="${warning}"></div>
 
-            <th:block th:replace="${content}"></th:block>
+            <th:block layout:fragment="content">
+                <!-- Content will be replaced by child templates -->
+            </th:block>
         </main>
 
         <!-- Footer -->
-        <footer class="footer" th:fragment="footer">
-            <p>Tibia Party Finder &copy; 2024 - Não afiliado à CipSoft</p>
+        <footer class="footer">
+            <p>Tibia Party Finder &copy; 2024 - Nao afiliado a CipSoft</p>
         </footer>
     </div>
 
     <script th:src="@{/js/app.js}"></script>
-    <th:block th:replace="${extraScripts}"></th:block>
+    <th:block layout:fragment="extraScripts">
+        <!-- Extra scripts from child templates -->
+    </th:block>
 </body>
 </html>

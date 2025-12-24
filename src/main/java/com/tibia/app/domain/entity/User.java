@@ -41,6 +41,10 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    @Column(name = "is_admin")
+    @Builder.Default
+    private Boolean isAdmin = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -70,6 +74,10 @@ public class User {
 
     public boolean isBlocked() {
         return status == UserStatus.BLOCKED;
+    }
+
+    public boolean isAdmin() {
+        return Boolean.TRUE.equals(isAdmin);
     }
 
     public boolean hasPassword() {

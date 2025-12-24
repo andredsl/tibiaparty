@@ -1,36 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/base}"
+      lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PTs Disponiveis - Tibia Party Finder</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <header class="header">
-        <div class="header-content">
-            <a th:href="@{/}" class="logo">
-                <span class="logo-icon">&#9876;</span>
-                <span class="logo-text">Tibia PT Finder</span>
-            </a>
-            <nav class="nav">
-                <span class="nav-user">
-                    <span th:text="${character.name}">CharName</span>
-                    (<span th:text="${character.vocation.abbreviation}">EK</span>
-                    <span th:text="${character.level}">100</span>) -
-                    <span th:text="${character.world.name}">World</span>
-                </span>
-                <a th:href="@{/parties}" class="nav-link active">PTs</a>
-                <a th:href="@{/parties/create}" class="nav-link">Criar PT</a>
-                <a th:href="@{/auth/logout}" class="nav-link nav-logout">Sair</a>
-            </nav>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
-        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
-
+    <th:block layout:fragment="content">
         <!-- Notificacoes de recusa -->
         <div th:if="${recentRejections != null and !recentRejections.isEmpty()}" class="rejection-notifications">
             <div th:each="rejection : ${recentRejections}" class="rejection-card">
@@ -92,6 +69,96 @@
                th:classappend="${selectedType != null and selectedType.name() == 'SOUL_CORE'} ? 'active' : ''"
                class="filter-btn">Soul Core</a>
         </div>
+
+        <!-- Secao de Apostas - Boosted Creature -->
+<!--        <div th:if="${bettingError == null or bettingError == false}" class="betting-widget">-->
+            <!-- Header do Widget (visivel) -->
+<!--            <div class="betting-widget-header">-->
+<!--                <div class="betting-title">-->
+<!--                    <span class="betting-icon">&#127922;</span>-->
+<!--                    <h3>Aposte no Boostado de Amanha!</h3>-->
+<!--                </div>-->
+<!--                <div class="betting-pool-info">-->
+<!--                    <span class="pool-label">Pool Total:</span>-->
+<!--                    <span class="pool-value" th:text="${bettingPool} + ' TC'">0 TC</span>-->
+<!--                </div>-->
+<!--            </div>-->
+
+            <!--/* Body do Widget (COMENTADO - descomentar para reativar)
+            <div th:if="${userCurrentBets != null and !userCurrentBets.isEmpty()}" class="user-bets-widget">
+                <h4 class="user-bets-title">Suas apostas para amanha:</h4>
+                <div class="user-bets-list">
+                    <div th:each="bet : ${userCurrentBets}" class="user-bet-item">
+                        <div class="current-bet-info">
+                            <img th:if="${bet.creatureImageUrl != null}"
+                                 th:src="${bet.creatureImageUrl}"
+                                 th:alt="${bet.creatureName}"
+                                 class="bet-creature-img" />
+                            <div class="bet-details-widget">
+                                <span class="bet-creature-name" th:text="${bet.creatureName}">Creature</span>
+                                <span class="bet-amount-value" th:text="${bet.amount} + ' TC'">25 TC</span>
+                            </div>
+                            <span class="bet-status-badge"
+                                  th:classappend="${bet.status.name().toLowerCase()}"
+                                  th:text="${bet.status.displayName}">Pendente</span>
+
+                            <div th:if="${bet.canBeCancelled()}" class="bet-actions-widget">
+                                <form th:action="@{/parties/cancel-bet/{id}(id=${bet.id})}" method="post">
+                                    <button type="submit" class="btn btn-xs btn-danger"
+                                            onclick="return confirm('Cancelar esta aposta?')">Cancelar</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div th:if="${bet.isPending()}" class="bet-payment-reminder">
+                            <span class="reminder-icon">&#9888;</span>
+                            <span>Transfira <strong th:text="${bet.amount} + ' TC'">25 TC</strong> para confirmar</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${canBet != null and canBet}" class="quick-bet-widget">
+                <h4 th:if="${userCurrentBets != null and !userCurrentBets.isEmpty()}" class="add-bet-title">Fazer outra aposta:</h4>
+                <form th:action="@{/parties/quick-bet}" method="post" class="quick-bet-form" id="quickBetForm">
+                    <input type="hidden" name="creatureName" id="selectedCreatureName" required />
+                    <input type="hidden" name="amount" value="25" />
+
+                    <div class="creature-selection" th:if="${topCreatures != null and !topCreatures.isEmpty()}">
+                        <label>Escolha a criatura:</label>
+                        <div class="creature-quick-grid">
+                            <div th:each="creature : ${topCreatures}"
+                                 class="creature-quick-option"
+                                 th:data-name="${creature.name}"
+                                 th:data-img="${creature.imageUrl}"
+                                 onclick="selectQuickCreature(this)">
+                                <img th:src="${creature.imageUrl}" th:alt="${creature.name}" />
+                                <span th:text="${creature.name}">Creature</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/betting/create}" class="see-all-link">Ver todas as criaturas &rarr;</a>
+                    </div>
+
+                    <div class="selected-creature-preview" id="selectedPreview" style="display: none;">
+                        <span class="preview-label">Selecionado:</span>
+                        <img id="previewImg" src="" alt="" />
+                        <span id="previewName" class="preview-name"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-bet" id="submitBetBtn" disabled>
+                        Confirmar Aposta (25 TC)
+                    </button>
+                </form>
+            </div>
+            */-->
+
+            <!-- Footer do Widget (visivel) -->
+<!--            <div class="betting-widget-footer">-->
+<!--                <a th:href="@{/betting}" class="betting-more-link">-->
+<!--                    Ver historico e fazer apostas &rarr;-->
+<!--                </a>-->
+<!--            </div>-->
+<!--        </div>-->
 
         <!-- Lista de Parties -->
         <div th:if="${parties != null and !parties.isEmpty()}" class="party-list">
@@ -275,10 +342,26 @@
             </p>
             <a th:if="${!isInParty}" th:href="@{/parties/create}" class="btn btn-primary">Criar PT</a>
         </div>
-    </main>
+    </th:block>
 
-    <footer class="footer">
-        <p>Tibia Party Finder - Nao afiliado a CipSoft</p>
-    </footer>
+    <!--/* Scripts do widget de apostas (COMENTADO - descomentar junto com o widget)
+    <th:block layout:fragment="extraScripts">
+        <script>
+            function selectQuickCreature(element) {
+                document.querySelectorAll('.creature-quick-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                element.classList.add('selected');
+                const name = element.dataset.name;
+                const img = element.dataset.img;
+                document.getElementById('selectedCreatureName').value = name;
+                document.getElementById('previewName').textContent = name;
+                document.getElementById('previewImg').src = img;
+                document.getElementById('selectedPreview').style.display = 'flex';
+                document.getElementById('submitBetBtn').disabled = false;
+            }
+        </script>
+    </th:block>
+    */-->
 </body>
 </html>

@@ -22,12 +22,12 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         // Interceptor para verificar autenticação
         registry.addInterceptor(new AuthInterceptor(sessionService))
-                .addPathPatterns("/parties/**", "/profile/**", "/characters/**")
+                .addPathPatterns("/parties/**", "/profile/**", "/characters/**", "/betting/**")
                 .excludePathPatterns("/auth/**", "/css/**", "/js/**", "/images/**");
 
         // Interceptor para forçar criação de senha
         registry.addInterceptor(new PasswordRequiredInterceptor(sessionService))
-                .addPathPatterns("/parties/**", "/profile/**", "/characters/**")
+                .addPathPatterns("/parties/**", "/profile/**", "/characters/**", "/betting/**")
                 .excludePathPatterns("/auth/**", "/css/**", "/js/**", "/images/**");
     }
 
