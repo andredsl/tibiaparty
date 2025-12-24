@@ -29,7 +29,7 @@ public class TibiaApiClient {
     private static final Logger log = LoggerFactory.getLogger(TibiaApiClient.class);
 
     private static final String TIBIADATA_API_URL = "https://api.tibiadata.com/v4/character/";
-    private static final int TIMEOUT_SECONDS = 10;
+    private static final int TIMEOUT_SECONDS = 15;
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
@@ -83,7 +83,7 @@ public class TibiaApiClient {
 
             if (response.statusCode() != 200) {
                 log.error("TibiaData API retornou status {}", response.statusCode());
-                throw new TibiaApiException("Erro ao buscar dados do TibiaData: HTTP " + response.statusCode());
+                throw new TibiaApiException("O servico TibiaData esta instavel no momento. Tente novamente em alguns minutos.");
             }
 
             TibiaDataResponse apiResponse = objectMapper.readValue(response.body(), TibiaDataResponse.class);
@@ -108,7 +108,7 @@ public class TibiaApiClient {
             throw e;
         } catch (Exception e) {
             log.error("Erro ao buscar character {}: {}", characterName, e.getMessage());
-            throw new TibiaApiException("Erro ao buscar dados do TibiaData", e);
+            throw new TibiaApiException("O servico TibiaData esta instavel no momento. Tente novamente em alguns minutos.", e);
         }
     }
 
