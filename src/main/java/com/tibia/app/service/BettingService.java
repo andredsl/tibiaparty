@@ -328,6 +328,16 @@ public class BettingService {
     }
 
     /**
+     * Retorna rodadas em aberto que podem ser finalizadas (targetDate <= hoje)
+     */
+    public List<BettingRound> getOpenRoundsReadyToFinalize() {
+        LocalDate today = LocalDate.now();
+        return bettingRoundRepository.findAllUnfinalized().stream()
+                .filter(round -> !round.getTargetDate().isAfter(today))
+                .toList();
+    }
+
+    /**
      * Retorna estatisticas de apostas da rodada atual
      */
     public List<Object[]> getCurrentRoundStats() {

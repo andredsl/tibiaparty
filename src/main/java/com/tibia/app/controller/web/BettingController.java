@@ -229,13 +229,23 @@ public class BettingController {
         // Apostas pendentes
         List<Bet> pendingBets = bettingService.getPendingBets();
 
-        // Rodada atual
+        // Rodada atual (para amanha)
         BettingRound currentRound = bettingService.getOrCreateCurrentRound();
+
+        // Rodadas em aberto prontas para finalizar (targetDate <= hoje)
+        List<BettingRound> openRounds;
+        try {
+            openRounds = bettingService.getOpenRoundsReadyToFinalize();
+        } catch (Exception e) {
+            log.error("Erro ao buscar rodadas em aberto: {}", e.getMessage());
+            openRounds = java.util.Collections.emptyList();
+        }
 
         model.addAttribute("character", character);
         model.addAttribute("pendingBets", pendingBets);
         model.addAttribute("currentRound", currentRound);
         model.addAttribute("currentPool", bettingService.getCurrentPoolTotal());
+        model.addAttribute("openRounds", openRounds);
 
         return "betting/admin";
     }
@@ -272,10 +282,12 @@ public class BettingController {
     }
 
     /**
-     * Finaliza a rodada do dia
+     * Finaliza uma rodada especifica por data
      */
     @PostMapping("/admin/finalize")
-    public String finalizeRound(RedirectAttributes redirectAttrs) {
+    public String finalizeRound(
+            @RequestParam(required = false) String targetDate,
+            RedirectAttributes redirectAttrs) {
         if (!sessionService.isAuthenticated()) {
             return "redirect:/auth/login";
         }
@@ -286,8 +298,16 @@ public class BettingController {
         }
 
         try {
-            bettingService.finalizeRound(java.time.LocalDate.now());
-            redirectAttrs.addFlashAttribute("success", "Rodada finalizada com sucesso!");
+            java.time.LocalDate date;
+            if (targetDate != null && !targetDate.isEmpty()) {
+                date = java.time.LocalDate.parse(targetDate);
+            } else {
+                date = java.time.LocalDate.now();
+            }
+
+            bettingService.finalizeRound(date);
+            redirectAttrs.addFlashAttribute("success",
+                    "Rodada de " + date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + " finalizada com sucesso!");
         } catch (Exception e) {
             log.error("Erro ao finalizar rodada: {}", e.getMessage());
             redirectAttrs.addFlashAttribute("error", e.getMessage());

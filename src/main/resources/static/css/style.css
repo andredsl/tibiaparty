@@ -2160,6 +2160,65 @@ a:hover {
 }
 
 /* ===== Admin Page ===== */
+.open-rounds-section {
+    margin-bottom: 2rem;
+}
+
+.open-rounds-section h2 {
+    margin-bottom: 1rem;
+    color: var(--warning);
+}
+
+.open-rounds-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.open-round-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 1.25rem;
+    background-color: var(--bg-card);
+    border: 2px solid var(--warning);
+    border-radius: 8px;
+    flex-wrap: wrap;
+}
+
+.open-round-card .round-info {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.open-round-card .round-date,
+.open-round-card .round-pool,
+.open-round-card .round-accumulated {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.open-round-card .round-date span,
+.open-round-card .round-pool span,
+.open-round-card .round-accumulated span {
+    font-size: 1.1rem;
+}
+
+.open-round-card .round-pool span {
+    color: var(--accent-gold);
+}
+
+.no-open-rounds {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
 .admin-round-info {
     margin-bottom: 2rem;
 }

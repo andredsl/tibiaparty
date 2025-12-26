@@ -16,10 +16,46 @@
             <a th:href="@{/betting}" class="btn btn-secondary">Voltar</a>
         </div>
 
-        <!-- Info da Rodada -->
+        <!-- Rodadas em Aberto (prontas para finalizar) -->
+        <div class="open-rounds-section" th:if="${openRounds != null and !openRounds.isEmpty()}">
+            <h2>Rodadas em Aberto (Aguardando Finalizacao)</h2>
+            <div class="open-rounds-list">
+                <div th:each="round : ${openRounds}" class="open-round-card">
+                    <div class="round-info">
+                        <div class="round-date">
+                            <strong>Data Alvo:</strong>
+                            <span th:text="${#temporals.format(round.targetDate, 'dd/MM/yyyy')}">01/01/2024</span>
+                        </div>
+                        <div class="round-pool">
+                            <strong>Pool:</strong>
+                            <span th:text="${round.totalPool != null ? round.totalPool : 0} + ' TC'">0 TC</span>
+                        </div>
+                        <div class="round-accumulated">
+                            <strong>Acumulado:</strong>
+                            <span th:text="${round.accumulatedPool != null ? round.accumulatedPool : 0} + ' TC'">0 TC</span>
+                        </div>
+                    </div>
+                    <div class="round-actions">
+                        <form th:action="@{/betting/admin/finalize}" method="post"
+                              onsubmit="return confirm('Tem certeza que deseja finalizar esta rodada?')">
+                            <input type="hidden" name="targetDate" th:value="${round.targetDate}" />
+                            <button type="submit" class="btn btn-warning">
+                                Finalizar <span th:text="${#temporals.format(round.targetDate, 'dd/MM')}">01/01</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="no-open-rounds" th:if="${openRounds == null or openRounds.isEmpty()}">
+            <p class="text-secondary">Nenhuma rodada pendente de finalizacao.</p>
+        </div>
+
+        <!-- Info da Rodada Atual (para amanha) -->
         <div class="admin-round-info">
             <div class="round-card">
-                <h3>Rodada Atual</h3>
+                <h3>Proxima Rodada (Aceitando Apostas)</h3>
                 <div class="round-details">
                     <div class="round-detail">
                         <span class="label">Data Alvo:</span>
@@ -33,19 +69,6 @@
                         <span class="label">Acumulado:</span>
                         <span class="value" th:text="${currentRound.accumulatedPool} + ' TC'">0 TC</span>
                     </div>
-                </div>
-
-                <!-- Finalizar Rodada -->
-                <div class="finalize-section" th:if="${!currentRound.isFinalized}">
-                    <form th:action="@{/betting/admin/finalize}" method="post">
-                        <button type="submit" class="btn btn-warning"
-                                onclick="return confirm('Tem certeza que deseja finalizar a rodada de HOJE? Isso ira determinar os vencedores baseado na criatura boostada atual.')">
-                            Finalizar Rodada de Hoje
-                        </button>
-                    </form>
-                    <p class="finalize-warning">
-                        Isso ira buscar a criatura boostada de hoje e determinar os vencedores.
-                    </p>
                 </div>
             </div>
         </div>
